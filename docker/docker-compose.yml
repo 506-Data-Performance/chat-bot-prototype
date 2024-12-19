@@ -1,0 +1,12 @@
+version: "3"
+
+services:
+  ocr-service:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    image: 506/ocr-service:dev
+    env_file:
+      - ../.env
+    ports:
+      - "5000:5000"

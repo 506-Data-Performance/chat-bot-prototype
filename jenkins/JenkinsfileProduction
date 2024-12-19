@@ -1,0 +1,81 @@
+pipeline {
+    agent any
+    environment {
+        DOCKERHUB_ID = credentials('DOCKERHUB_ID')
+        DOCKERHUB_PW = credentials('DOCKERHUB_PW')
+    }
+    stages {
+        stage('Checkout Reposistory') {
+            steps {
+                checkout scm
+            }
+        }
+        stage('Initiliazize') {
+            steps {
+                echo 'Initializing..'
+                echo "Running ${env.BUILD_ID} on ${env.JENKINS_URL}"
+            }
+        }
+        stage('Login to Docker Hub') {
+            steps {
+                echo 'Logging in to Docker Hub'
+                sh 'echo $DOCKERHUB_PW | docker login -u $DOCKERHUB_ID --password-stdin'
+            }
+        }
+        stage('Login to AWS ECR') {
+            steps {
+                echo 'Logging in to AWS ECR'
+                sh "aws ecr get-login-password --region eu-central-1 | docker login --username ${AWS_ECR_USERNAME} --password-stdin ${AWS_ECR_REPO_URI}"
+            }
+        }
+        stage('Test') {
+            steps {
+                echo 'Testing..'
+            }
+        }
+        stage('Build Image') {
+            steps {
+                echo 'Building..'
+                sh 'docker build -t 506data/ocr-service:latest -f docker/Dockerfile .'
+                echo 'Done'
+            }
+        }
+        stage('Pushing image to Dockerhub') {
+            steps {
+                echo 'Deploying to Docker Hub....'
+                sh 'docker push 506data/ocr-service:latest'
+                echo 'Done'
+            }
+        }
+        stage('Pushing image to ECR') {
+            steps {
+                echo 'Tagging image'
+                sh "docker tag 506data/ocr-service:latest ${AWS_ECR_REPO_URI}/506data/ocr-service:latest"
+                echo 'Deploying to ECR....'
+                sh "docker push ${AWS_ECR_REPO_URI}/506data/ocr-service:latest"
+                echo 'Done'
+            }
+        }
+        stage('Deploy to ECS staging service') {
+            steps {
+                sh "aws ecs update-service --cluster ${ECS_CLUSTER_PRODUCTION} --service ocr-service-production --force-new-deployment"
+            }
+        }
+        // stage('Deploy to production servers') {
+        //     steps {
+        //         ansiblePlaybook(
+        //             playbook: '/ansible/production/deploy-ocr-service.yml',
+        //             inventory: '/ansible/inventory.ini',
+        //         )
+        //     }
+        // }
+    }
+    post {
+       success {
+            sh """curl -X POST -H "Content-type: application/json" --data '{"text": "🚀 Production: OCR Service successfully deployed!"}' ${SLACK_WEBHOOK_ID}"""
+        }
+        failure {
+            sh """curl -X POST -H "Content-type: application/json" --data '{"text": "💥 Production: Deployment of OCR Service has failed!"}' ${SLACK_WEBHOOK_ID}"""
+        }
+    }
+}

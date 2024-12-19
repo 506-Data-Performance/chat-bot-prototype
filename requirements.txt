@@ -1,0 +1,20 @@
+Flask==3.0.0
+python-dotenv>=0.21.0
+requests==2.28.1
+PyMuPDF==1.23.21
+pytesseract==0.3.13
+langdetect==1.0.9
+opencv-python==4.10.0.84
+pdf2image==1.17.0
+
+# Dependencies for OCR functionality
+ocrmypdf==14.4.0
+pikepdf==8.0.0
+pandas==2.0.3
+Pillow==10.2.0
+
+# Optional dependencies for cloud storage and PDF processing
+boto3==1.35.5
+pypdf2==3.0.1
+
+gunicorn==21.2.0 # Specify the version if needed
