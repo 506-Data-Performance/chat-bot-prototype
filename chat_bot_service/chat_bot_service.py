@@ -84,7 +84,7 @@ def chat():
                         # Extract the text after "data:" and add it to the response text
                         response_text += decoded_line[5:].strip() + "\n"
 
-            print("Extracted Response:", response_text)
+            #print("Extracted Response:", response_text)
             return jsonify({"response": response_text.strip()}), 200
         else:
             try:

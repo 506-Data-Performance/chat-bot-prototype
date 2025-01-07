@@ -1,3 +1,6 @@
+// -----------------------------------------------------------
+// 1) Initialization & Global Variables
+// -----------------------------------------------------------
 console.log("Initializing chatbot...");
 
 // Chat history to maintain conversation context
@@ -6,7 +9,9 @@ const chatHistory = [];
 // Track if the welcome message has already been displayed
 let hasDisplayedWelcomeMessage = false;
 
-// Create a chatbot button (always visible)
+// -----------------------------------------------------------
+// 2) Create Chatbot Button (always visible)
+// -----------------------------------------------------------
 const chatbotButton = document.createElement("div");
 chatbotButton.style.position = "fixed";
 chatbotButton.style.bottom = "20px";
@@ -27,7 +32,9 @@ chatbotButton.innerText = "💬";
 chatbotButton.title = "Chat with us!";
 document.body.appendChild(chatbotButton);
 
-// Create a chatbot container (hidden by default)
+// -----------------------------------------------------------
+// 3) Create Chatbot Container (initially hidden)
+// -----------------------------------------------------------
 const chatbotContainer = document.createElement("div");
 chatbotContainer.style.position = "fixed";
 chatbotContainer.style.bottom = "90px"; // Above the button
@@ -45,7 +52,9 @@ chatbotContainer.style.fontFamily = "Arial, sans-serif";
 chatbotContainer.style.zIndex = "9999";
 document.body.appendChild(chatbotContainer);
 
-// Create a chatbot header
+// -----------------------------------------------------------
+// 4) Create Chatbot Header
+// -----------------------------------------------------------
 const chatbotHeader = document.createElement("div");
 chatbotHeader.style.background = "#0078D7";
 chatbotHeader.style.color = "#fff";
@@ -68,19 +77,24 @@ const headerText = document.createElement("span");
 headerText.innerText = "AI Genie";
 chatbotHeader.appendChild(headerText);
 
+// Close the chatbot when clicking on header (optional)
 chatbotHeader.onclick = () => {
   chatbotContainer.style.display = "none";
 };
 chatbotContainer.appendChild(chatbotHeader);
 
-// Create a messages container
+// -----------------------------------------------------------
+// 5) Create Messages Container
+// -----------------------------------------------------------
 const messagesContainer = document.createElement("div");
 messagesContainer.style.flex = "1";
 messagesContainer.style.padding = "10px";
 messagesContainer.style.overflowY = "auto";
 chatbotContainer.appendChild(messagesContainer);
 
-// Display welcome message
+// -----------------------------------------------------------
+// 6) Function to display welcome message (only once)
+// -----------------------------------------------------------
 const displayWelcomeMessage = () => {
   if (!hasDisplayedWelcomeMessage) {
     const welcomeMessageElem = document.createElement("div");
@@ -116,7 +130,31 @@ const displayWelcomeMessage = () => {
   }
 };
 
-// Create an input bar
+// -----------------------------------------------------------
+// 7) Utility function to convert Markdown links to HTML links
+// -----------------------------------------------------------
+function formatMessageWithLinks(input) {
+  // Regex explanation:
+  // \[([^\]]+)\] - captures the link text (any characters not a closing square bracket)
+  // \(([^)]+)\)  - captures the link URL (any characters not a closing parenthesis)
+  const markdownLinkPattern = /\[([^\]]+)\]\(([^)]+)\)/g;
+
+  return input.replace(
+    markdownLinkPattern,
+    (match, text, url) => `<a href="${url}" style="color: blue;">${text}</a>`
+  );
+}
+
+// -----------------------------------------------------------
+// 8) Example of the link format function (just a test in console)
+// -----------------------------------------------------------
+const testInput =
+  "Here is [OpenAI](https://openai.com) and [GitHub](https://github.com).";
+//console.log(formatMessageWithLinks(testInput));
+
+// -----------------------------------------------------------
+// 9) Create input bar (user input & send button)
+// -----------------------------------------------------------
 const inputBar = document.createElement("div");
 inputBar.style.display = "flex";
 inputBar.style.padding = "10px";
@@ -141,7 +179,9 @@ sendButton.style.borderRadius = "5px";
 sendButton.style.cursor = "pointer";
 inputBar.appendChild(sendButton);
 
-// Simulate a typing effect for bot responses with proper bubble and icon
+// -----------------------------------------------------------
+// 10) Typing effect for bot responses
+// -----------------------------------------------------------
 const simulateTypingInBubble = (message, botMessageElem) => {
   let index = 0;
   const interval = setInterval(() => {
@@ -154,11 +194,13 @@ const simulateTypingInBubble = (message, botMessageElem) => {
   }, 50); // Adjust speed by changing the interval (in milliseconds)
 };
 
-// Handle sending messages
-sendButton.onclick = async () => {
+// -----------------------------------------------------------
+// 11) Function to handle sending messages (extracted from sendButton.onclick)
+// -----------------------------------------------------------
+async function handleSendMessage() {
   const userMessage = inputField.value.trim();
   if (userMessage) {
-    // Add user's message to chat history
+    // 1. Add user's message to chat history
     chatHistory.push({
       role: "user",
       content: userMessage,
@@ -166,7 +208,7 @@ sendButton.onclick = async () => {
       sources: [],
     });
 
-    // Display the user's message with a human icon
+    // 2. Display the user's message with a human icon
     const userMessageWrapper = document.createElement("div");
     userMessageWrapper.style.display = "flex";
     userMessageWrapper.style.alignItems = "flex-start";
@@ -198,7 +240,7 @@ sendButton.onclick = async () => {
     userMessageWrapper.appendChild(userIcon); // User icon on the right
     messagesContainer.appendChild(userMessageWrapper);
 
-    // Create the bot's message container with bubble and icon
+    // 3. Create the bot's message container with bubble and icon
     const botMessageWrapper = document.createElement("div");
     botMessageWrapper.style.display = "flex";
     botMessageWrapper.style.alignItems = "flex-start";
@@ -226,18 +268,15 @@ sendButton.onclick = async () => {
     botIcon.style.marginLeft = "10px";
     botIcon.innerText = "🤖";
 
-    // Show "thinking..." initially
-    botMessageBubble.innerText = "Thinking...";
     botMessageWrapper.appendChild(botIcon);
     botMessageWrapper.appendChild(botMessageBubble);
     messagesContainer.appendChild(botMessageWrapper);
 
-    // Make API call https://chat-bot-prototype-4ekf.vercel.app/api/v1/chat
+    // 4. Make API call to your chatbot
     try {
       const response = await fetch(
         "https://chat-bot-prototype-4ekf.vercel.app/api/v1/chat",
         {
-          // local    http://127.0.0.1:5000/api/v1/chat
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -247,11 +286,14 @@ sendButton.onclick = async () => {
       );
 
       const data = await response.json();
-      // Replace "thinking..." with the actual response
-      botMessageBubble.innerText = ""; // Clear placeholder
-      simulateTypingInBubble(data.response, botMessageBubble);
 
-      // Add bot's response to chat history
+      // 4a. Typing effect and final response
+      simulateTypingInBubble(data.response, botMessageBubble);
+      setTimeout(() => {
+        botMessageBubble.innerHTML = formatMessageWithLinks(data.response);
+      }, data.response.length * 50 + 100);
+
+      // 4b. Add bot's response to chat history
       chatHistory.push({
         role: "bot",
         content: data.response,
@@ -261,12 +303,27 @@ sendButton.onclick = async () => {
         "Sorry, something went wrong. Please try again later.";
     }
 
+    // 5. Clear input field & scroll
     inputField.value = "";
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
   }
-};
+}
 
-// Show/Hide Chat on Button Click
+// -----------------------------------------------------------
+// 12) Wire up the "Send" button & "Enter" key to the same function
+// -----------------------------------------------------------
+sendButton.onclick = handleSendMessage;
+
+inputField.addEventListener("keyup", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault(); // Prevents default form submission, etc.
+    handleSendMessage();
+  }
+});
+
+// -----------------------------------------------------------
+// 13) Show/Hide Chat on Button Click
+// -----------------------------------------------------------
 chatbotButton.onclick = () => {
   if (chatbotContainer.style.display === "none") {
     chatbotContainer.style.display = "flex";
