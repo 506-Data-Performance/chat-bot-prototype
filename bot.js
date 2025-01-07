@@ -232,15 +232,19 @@ sendButton.onclick = async () => {
     botMessageWrapper.appendChild(botMessageBubble);
     messagesContainer.appendChild(botMessageWrapper);
 
-    // Make API call
+    // Make API call https://chat-bot-prototype-4ekf.vercel.app/api/v1/chat
     try {
-      const response = await fetch("http://127.0.0.1:5000/api/v1/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ messages: chatHistory }),
-      });
+      const response = await fetch(
+        "https://chat-bot-prototype-4ekf.vercel.app/api/v1/chat",
+        {
+          // local    http://127.0.0.1:5000/api/v1/chat
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ messages: chatHistory }),
+        }
+      );
 
       const data = await response.json();
       // Replace "thinking..." with the actual response

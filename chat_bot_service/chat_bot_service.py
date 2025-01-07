@@ -16,7 +16,7 @@ def hello_geek():
 @api.route('/hello')
 def hello():
     print("Welcome to the ocr service API")
-    return "<h1>Welcome to the OCR service API</h1>"
+    return "<h1>Welcome to the Chatpot Prototype service API</h1>"
 
 @api.get("/status")
 def get_status():
