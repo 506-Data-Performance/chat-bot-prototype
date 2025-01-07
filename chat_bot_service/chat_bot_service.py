@@ -78,10 +78,11 @@ def chat():
         if response.status_code == 200:
             # Process the streaming response to extract `data:` fields
             response_text = ""
-            for line in response.iter_lines(decode_unicode=True):
-                if line.startswith("data:"):
-                    # Extract the text after "data:" and add it to the response text
-                    response_text += line[5:].strip() + "\n"
+            for line in response.iter_lines():
+                    decoded_line = line.decode("utf-8")  # Decode each line using UTF-8
+                    if decoded_line.startswith("data:"):
+                        # Extract the text after "data:" and add it to the response text
+                        response_text += decoded_line[5:].strip() + "\n"
 
             print("Extracted Response:", response_text)
             return jsonify({"response": response_text.strip()}), 200
