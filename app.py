@@ -21,7 +21,8 @@ def create_app(use_config: bool = False) -> flask.app.Flask:
 
     # create and configure the app
     flask_app = Flask(__name__)
-    CORS(flask_app)  # Enable CORS for all routes  # for testing 
+    #CORS(flask_app)  # Enable CORS for all routes  # for testing 
+    CORS(flask_app, resources={r"/*": {"origins": ["https://www.linzag-sport.at"]}})
     if use_config:
         flask_app.config.from_pyfile("config.py")
 
