@@ -28,6 +28,7 @@ class ChatBotService:
     # Class-level configuration
     API_URL = os.getenv("API_URL", "https://506.506.ai:3003/api/v1/public/chat?internalSystemPrompt=true")
     API_KEY = os.getenv("API_KEY")
+    KnowledegeBase = os.getenv("KNOWLAGE_BASE")
     API_ORGANIZATION_ID = os.getenv("API_ORGANIZATION_ID")
     print(API_URL, API_KEY, API_ORGANIZATION_ID)
 
@@ -55,7 +56,7 @@ def chat():
             "roleId": "",
             "temperature": data.get("temperature", 0.7),
             "selectedMode": data.get("selectedMode", "BASIC"),
-            "selectedFiles": data.get("selectedFiles", ["66df99f8-1abe-4c8a-96ee-56edef357536_Mittarbeiter_new.pdf"]),
+            "selectedFiles": data.get("selectedFiles", [ChatBotService.KnowledegeBase ]),
             "selectedDataCollections": data.get("selectedDataCollections", [])
         }
 
