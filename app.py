@@ -31,10 +31,13 @@ def create_app(use_config: bool = False) -> flask.app.Flask:
     flask_app.register_blueprint(chat_instance.api, url_prefix="/api")
     return flask_app
 
+# Vercel expects `app` or `handler` to be at the module level
+app = create_app()  # This line is required for Vercel to detect the app
 
 if __name__ == "__main__":
     #host and port will only work in local testing
     port = os.environ.get("PORT")
-    host = os.environ.get("HOST")
+    #host = os.environ.get("HOST")
+    host = os.environ.get("HOST", "0.0.0.0") # for versel 
     app = create_app()
     app.run(host=host, port=port, threaded=True, debug=True)
