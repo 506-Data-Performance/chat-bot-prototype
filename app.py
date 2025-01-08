@@ -19,10 +19,12 @@ def create_app(use_config: bool = False) -> flask.app.Flask:
     """
     load_dotenv()
 
+    cors_origins = os.getenv("CORS_ORIGINS", "")  # Get the value or default to an empty string
+
     # create and configure the app
     flask_app = Flask(__name__)
     #CORS(flask_app)  # Enable CORS for all routes  # for testing 
-    CORS(flask_app, resources={r"/*": {"origins": ["https://www.linzag-sport.at"]}})
+    CORS(flask_app, resources={r"/*": {"origins": [cors_origins]}})
     if use_config:
         flask_app.config.from_pyfile("config.py")
 

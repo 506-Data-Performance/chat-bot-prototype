@@ -26,11 +26,17 @@ def get_status():
 
 class ChatBotService:
     # Class-level configuration
-    API_URL = os.getenv("API_URL", "https://506.506.ai:3003/api/v1/public/chat?internalSystemPrompt=true")
+    API_URL = os.getenv("API_URL")
     API_KEY = os.getenv("API_KEY")
-    KnowledegeBase = os.getenv("KNOWLAGE_BASE")
+    SELECTED_FILES = os.getenv("SELECTED_FILES")
+    SELECTED_DATA_COLLECTIONS = os.getenv("SELECTED_DATA_COLLECTIONS")
     API_ORGANIZATION_ID = os.getenv("API_ORGANIZATION_ID")
-    print(API_URL, API_KEY, API_ORGANIZATION_ID)
+    MODEL_ID = os.getenv("MODEL_ID", 'gpt-4o-mini')
+    ROLE_ID = os.getenv("ROLE_ID",'')
+    TEMPERATURE = float(os.getenv("TEMPERATURE", 0.7))
+    BASIC = os.getenv("BASIC", 'BASIC')
+
+    #print(API_URL, API_KEY, API_ORGANIZATION_ID)
 
     def __init__(self):
         load_dotenv()
@@ -48,18 +54,18 @@ def chat():
         if not data:
             return jsonify({"error": "Request body must contain JSON data"}), 400
 
-        #print("Received data:", data)
+        print("Received data:", data)
 
         payload = {
-            "model": {"id": data.get("model_id", "gpt-4o-mini")},
+            "model": {"id": ChatBotService.MODEL_ID},
             "messages": data.get("messages", []),
-            "roleId": "1234abcd-5678-efgh-ijkl-9012mnop3456", # "Spezialisierter Assistent für die LINZ AG Sport Sektion Fitness & Power"
-            "temperature": data.get("temperature", 0.7),
-            "selectedMode": data.get("selectedMode", "BASIC"),
-            "selectedFiles": data.get("selectedFiles", [ChatBotService.KnowledegeBase ]),
-            "selectedDataCollections": data.get("selectedDataCollections", [])
+            "roleId": ChatBotService.ROLE_ID, 
+            "temperature": ChatBotService.TEMPERATURE,
+            "selectedMode": ChatBotService.BASIC,
+            "selectedFiles": [ChatBotService.SELECTED_FILES ],
+            "selectedDataCollections": ChatBotService.SELECTED_DATA_COLLECTIONS
         }
-
+        #print(payload)
         #print("API key:", ChatBotService.API_KEY)
         #print("API organization ID:", ChatBotService.API_ORGANIZATION_ID)
         #print("API URL:", ChatBotService.API_URL)
