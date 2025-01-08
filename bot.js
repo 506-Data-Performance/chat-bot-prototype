@@ -1,6 +1,26 @@
 // -----------------------------------------------------------
 // 1) Initialization & Global Variables
 // -----------------------------------------------------------
+// Header
+const HEADER_TEXT = "AI Genie"; // New variable for the header text
+const HEADER_TEXT_COLOR = "#fff";
+
+// Bot logo & welcome message
+const BOT_LOGO_URL = "https://www.506.ai/app/uploads/2024/05/logo.svg";
+const WELCOME_MESSAGE =
+  "Hallo! Ich bin AI Genie, die KI dieser Webseite. Ich weiß (fast) alles – frag mich einfach! Na gut, vielleicht nicht alles, aber ich gebe mein Bestes. 😉";
+const BOT_PLACEHOLDER_TEXT = "Thinking..."; // Placeholder text when bot is "thinking"
+
+// ---- New variables for customizing bubble colors & text ----
+const MAIN_COLOR = "#0078D7"; // Main brand color (used for header, buttons, etc.)
+const BOT_BUBBLE_COLOR = "#f0f0f0"; // Bot's bubble background
+const BOT_TEXT_COLOR = "#555"; // Bot's bubble text color
+const USER_TEXT_COLOR = "#fff"; // User's bubble text color
+
+// API endpoint for chatbot
+const API_ENDPOINT_URL =
+  "https://chat-bot-prototype-4ekf.vercel.app/api/v1/chat";
+
 console.log("Initializing chatbot...");
 
 // Chat history to maintain conversation context
@@ -18,7 +38,7 @@ chatbotButton.style.bottom = "20px";
 chatbotButton.style.right = "20px";
 chatbotButton.style.width = "60px";
 chatbotButton.style.height = "60px";
-chatbotButton.style.background = "#0078D7";
+chatbotButton.style.background = MAIN_COLOR; // replaced #0078D7
 chatbotButton.style.borderRadius = "50%";
 chatbotButton.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.2)";
 chatbotButton.style.display = "flex";
@@ -56,8 +76,8 @@ document.body.appendChild(chatbotContainer);
 // 4) Create Chatbot Header
 // -----------------------------------------------------------
 const chatbotHeader = document.createElement("div");
-chatbotHeader.style.background = "#0078D7";
-chatbotHeader.style.color = "#fff";
+chatbotHeader.style.background = MAIN_COLOR;
+chatbotHeader.style.color = HEADER_TEXT_COLOR; // replaced "#fff"
 chatbotHeader.style.padding = "10px";
 chatbotHeader.style.textAlign = "center";
 chatbotHeader.style.cursor = "pointer";
@@ -67,14 +87,14 @@ chatbotHeader.style.justifyContent = "center";
 
 // Add logo to header
 const logo = document.createElement("img");
-logo.src = "https://www.506.ai/app/uploads/2024/05/logo.svg";
+logo.src = BOT_LOGO_URL;
 logo.style.height = "20px";
 logo.style.marginRight = "10px";
 chatbotHeader.appendChild(logo);
 
 // Add text to header
 const headerText = document.createElement("span");
-headerText.innerText = "AI Genie";
+headerText.innerText = HEADER_TEXT; // replaced "AI Genie"
 chatbotHeader.appendChild(headerText);
 
 // Close the chatbot when clicking on header (optional)
@@ -105,7 +125,7 @@ const displayWelcomeMessage = () => {
     const botIcon = document.createElement("div");
     botIcon.style.width = "30px";
     botIcon.style.height = "30px";
-    botIcon.style.background = "#0078D7";
+    botIcon.style.background = MAIN_COLOR;
     botIcon.style.color = "#fff";
     botIcon.style.display = "flex";
     botIcon.style.alignItems = "center";
@@ -115,12 +135,11 @@ const displayWelcomeMessage = () => {
     botIcon.innerText = "🤖";
 
     const botMessageText = document.createElement("div");
-    botMessageText.style.color = "#555";
+    botMessageText.style.color = BOT_TEXT_COLOR; // replaced #555
     botMessageText.style.padding = "5px 10px";
-    botMessageText.style.background = "#f0f0f0";
+    botMessageText.style.background = BOT_BUBBLE_COLOR; // replaced #f0f0f0
     botMessageText.style.borderRadius = "10px";
-    botMessageText.innerText =
-      "Hallo! Ich bin AI Genie, die KI dieser Webseite. Ich weiß (fast) alles – frag mich einfach! Na gut, vielleicht nicht alles, aber ich gebe mein Bestes. 😉";
+    botMessageText.innerText = WELCOME_MESSAGE;
 
     welcomeMessageElem.appendChild(botIcon);
     welcomeMessageElem.appendChild(botMessageText);
@@ -135,8 +154,8 @@ const displayWelcomeMessage = () => {
 // -----------------------------------------------------------
 function formatMessageWithLinks(input) {
   // Regex explanation:
-  // \[([^\]]+)\] - captures the link text (any characters not a closing square bracket)
-  // \(([^)]+)\)  - captures the link URL (any characters not a closing parenthesis)
+  // \[([^\]]+)\] - captures the link text
+  // \(([^)]+)\)  - captures the link URL
   const markdownLinkPattern = /\[([^\]]+)\]\(([^)]+)\)/g;
 
   return input.replace(
@@ -172,7 +191,7 @@ const sendButton = document.createElement("button");
 sendButton.innerText = "Send";
 sendButton.style.marginLeft = "10px";
 sendButton.style.padding = "5px 10px";
-sendButton.style.background = "#0078D7";
+sendButton.style.background = MAIN_COLOR;
 sendButton.style.color = "#fff";
 sendButton.style.border = "none";
 sendButton.style.borderRadius = "5px";
@@ -197,7 +216,7 @@ const simulateTypingInBubble = (message, botMessageElem) => {
 };
 
 // -----------------------------------------------------------
-// 11) Function to handle sending messages (extracted from sendButton.onclick)
+// 11) Function to handle sending messages
 // -----------------------------------------------------------
 async function handleSendMessage() {
   const userMessage = inputField.value.trim();
@@ -214,22 +233,22 @@ async function handleSendMessage() {
     const userMessageWrapper = document.createElement("div");
     userMessageWrapper.style.display = "flex";
     userMessageWrapper.style.alignItems = "flex-start";
-    userMessageWrapper.style.justifyContent = "flex-end"; // Align to the right
+    userMessageWrapper.style.justifyContent = "flex-end"; // Align right
     userMessageWrapper.style.margin = "5px 0";
 
     const userMessageBubble = document.createElement("div");
-    userMessageBubble.style.color = "#fff";
+    userMessageBubble.style.color = USER_TEXT_COLOR; // replaced #fff
     userMessageBubble.style.padding = "5px 10px";
-    userMessageBubble.style.background = "#0078D7";
+    userMessageBubble.style.background = MAIN_COLOR; // main user bubble color
     userMessageBubble.style.borderRadius = "10px";
     userMessageBubble.style.display = "inline-block";
-    userMessageBubble.style.marginLeft = "10px"; // Add space for the icon
+    userMessageBubble.style.marginLeft = "10px"; // space for icon
     userMessageBubble.innerText = userMessage;
 
     const userIcon = document.createElement("div");
     userIcon.style.width = "30px";
     userIcon.style.height = "30px";
-    userIcon.style.background = "#0078D7";
+    userIcon.style.background = MAIN_COLOR;
     userIcon.style.color = "#fff";
     userIcon.style.display = "flex";
     userIcon.style.alignItems = "center";
@@ -239,29 +258,29 @@ async function handleSendMessage() {
     userIcon.innerText = "👱";
 
     userMessageWrapper.appendChild(userMessageBubble);
-    userMessageWrapper.appendChild(userIcon); // User icon on the right
+    userMessageWrapper.appendChild(userIcon); // icon on right
     messagesContainer.appendChild(userMessageWrapper);
 
     // 3. Create the bot's message container with bubble and icon
     const botMessageWrapper = document.createElement("div");
     botMessageWrapper.style.display = "flex";
     botMessageWrapper.style.alignItems = "flex-start";
-    botMessageWrapper.style.justifyContent = "flex-start"; // Align to the left
+    botMessageWrapper.style.justifyContent = "flex-start"; // Align left
     botMessageWrapper.style.margin = "5px 0";
 
     const botMessageBubble = document.createElement("div");
-    botMessageBubble.style.color = "#555";
+    botMessageBubble.style.color = BOT_TEXT_COLOR; // replaced #555
     botMessageBubble.style.padding = "5px 10px";
-    botMessageBubble.style.background = "#f0f0f0";
+    botMessageBubble.style.background = BOT_BUBBLE_COLOR; // replaced #f0f0f0
     botMessageBubble.style.borderRadius = "10px";
     botMessageBubble.style.display = "inline-block";
-    botMessageBubble.style.marginRight = "10px"; // Add space for the icon
-    botMessageBubble.innerText = "Thinking..."; // Placeholder text
+    botMessageBubble.style.marginRight = "10px"; // space for icon
+    botMessageBubble.innerText = BOT_PLACEHOLDER_TEXT; // replaced "Thinking..."
 
     const botIcon = document.createElement("div");
     botIcon.style.width = "30px";
     botIcon.style.height = "30px";
-    botIcon.style.background = "#0078D7";
+    botIcon.style.background = MAIN_COLOR;
     botIcon.style.color = "#fff";
     botIcon.style.display = "flex";
     botIcon.style.alignItems = "center";
@@ -273,25 +292,23 @@ async function handleSendMessage() {
     botMessageWrapper.appendChild(botIcon);
     botMessageWrapper.appendChild(botMessageBubble);
     messagesContainer.appendChild(botMessageWrapper);
-    //Scroll immediately so the placeholder is visible
+
+    // Scroll to show placeholder
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
     // 4. Make API call to your chatbot
     try {
-      const response = await fetch(
-        "https://chat-bot-prototype-4ekf.vercel.app/api/v1/chat",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ messages: chatHistory }),
-        }
-      );
+      const response = await fetch(API_ENDPOINT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ messages: chatHistory }),
+      });
 
       const data = await response.json();
 
-      // 4a. Typing effect and final response
+      // 4a. Typing effect
       simulateTypingInBubble(data.response, botMessageBubble);
       setTimeout(() => {
         botMessageBubble.innerHTML = formatMessageWithLinks(data.response);
@@ -307,20 +324,20 @@ async function handleSendMessage() {
         "Sorry, something went wrong. Please try again later.";
     }
 
-    // 5. Clear input field & scroll
+    // 5. Clear input & scroll
     inputField.value = "";
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
   }
 }
 
 // -----------------------------------------------------------
-// 12) Wire up the "Send" button & "Enter" key to the same function
+// 12) Wire up the "Send" button & "Enter" key
 // -----------------------------------------------------------
 sendButton.onclick = handleSendMessage;
 
 inputField.addEventListener("keyup", (event) => {
   if (event.key === "Enter") {
-    event.preventDefault(); // Prevents default form submission, etc.
+    event.preventDefault();
     handleSendMessage();
   }
 });
