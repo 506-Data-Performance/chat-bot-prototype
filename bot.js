@@ -188,10 +188,12 @@ const simulateTypingInBubble = (message, botMessageElem) => {
     if (index < message.length) {
       botMessageElem.innerText = message.slice(0, index + 1);
       index++;
+      // Scroll to bottom on each character
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
     } else {
       clearInterval(interval);
     }
-  }, 50); // Adjust speed by changing the interval (in milliseconds)
+  }, 50);
 };
 
 // -----------------------------------------------------------
@@ -271,6 +273,8 @@ async function handleSendMessage() {
     botMessageWrapper.appendChild(botIcon);
     botMessageWrapper.appendChild(botMessageBubble);
     messagesContainer.appendChild(botMessageWrapper);
+    //Scroll immediately so the placeholder is visible
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
     // 4. Make API call to your chatbot
     try {

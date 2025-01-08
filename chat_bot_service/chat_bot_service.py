@@ -48,12 +48,12 @@ def chat():
         if not data:
             return jsonify({"error": "Request body must contain JSON data"}), 400
 
-        print("Received data:", data)
+        #print("Received data:", data)
 
         payload = {
             "model": {"id": data.get("model_id", "gpt-4o-mini")},
             "messages": data.get("messages", []),
-            "roleId": "",
+            "roleId": "1234abcd-5678-efgh-ijkl-9012mnop3456", # "Spezialisierter Assistent für die LINZ AG Sport Sektion Fitness & Power"
             "temperature": data.get("temperature", 0.7),
             "selectedMode": data.get("selectedMode", "BASIC"),
             "selectedFiles": data.get("selectedFiles", [ChatBotService.KnowledegeBase ]),
