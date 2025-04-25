@@ -15,22 +15,29 @@ def create_app(use_config: bool = False) -> flask.app.Flask:
     Creates the Flask app.
     Config files and APIs need to be registered here.
     :return: The Flask app.
-
     """
     load_dotenv()
-
-    cors_origins = os.getenv("CORS_ORIGINS", "")  # Get the value or default to an empty string
-
+    
+    # Get CORS origins from environment
+    public_cors_origins = os.getenv("PUBLIC_CORS_ORIGINS", "").split(",")
+    private_cors_origins = os.getenv("PRIVATE_CORS_ORIGINS", "").split(",")
+    
     # create and configure the app
     flask_app = Flask(__name__)
-    #CORS(flask_app)  # Enable CORS for all routes  # for testing 
-    CORS(flask_app, resources={r"/*": {"origins": [cors_origins]}})
+    
+    # Instead of app-wide CORS, we'll set it per route
+    # We'll keep a basic CORS setup for non-API routes
+    CORS(flask_app)
+    
     if use_config:
         flask_app.config.from_pyfile("config.py")
-
-    # Initialize the OCR instance
-    chat_instance = chat_bot_service.ChatBotService()
-
+    
+    # Pass the CORS settings to the ChatBotService
+    chat_instance = chat_bot_service.ChatBotService(
+        public_cors_origins=public_cors_origins,
+        private_cors_origins=private_cors_origins
+    )
+    
     flask_app.register_blueprint(chat_instance.api, url_prefix="/api")
     return flask_app
 
