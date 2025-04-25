@@ -47,7 +47,7 @@ def load_assistant_settings():
         }
     }
     
-    print(f"Loaded {len(ASSISTANT_SETTINGS)} assistant configurations")
+    #print(f"Loaded {len(ASSISTANT_SETTINGS)} assistant configurations")
     return ASSISTANT_SETTINGS
 
 class ChatBotService:
@@ -124,11 +124,11 @@ class ChatBotService:
             if not data:
                 return jsonify({"error": "Request body must contain JSON data"}), 400
             
-            print("Received data:", data)
+            #print("Received data:", data)
             
             # Get assistant ID from request
             assistant_id = data.get("assistantId")
-            print("assistantId:", assistant_id)
+            #print("assistantId:", assistant_id)
             
             # Check if assistant ID exists in settings
             if assistant_id not in ASSISTANT_SETTINGS:
@@ -157,18 +157,18 @@ class ChatBotService:
             
             # Send the POST request to the API
             response = requests.post(self.API_URL, json=payload, headers=headers, stream=True)
-            print("Response status code:", response.status_code)
+            #print("Response status code:", response.status_code)
             
             if response.status_code == 200:
                 # Process the streaming response to extract `data:` fields
                 response_text = ""
                 for line in response.iter_lines():
                     decoded_line = line.decode("utf-8")
-                    print(f"Response line: {decoded_line}")  # Add this line
+                    #print(f"Response line: {decoded_line}")  # Add this line
                     if decoded_line.startswith("data:"):
                         response_text += decoded_line[5:].strip() + "\n"
                 
-                print(f"Final response content: {response_text}")  # Add this line
+                #print(f"Final response content: {response_text}")  # Add this line
                 return jsonify({"response": response_text.strip()}), 200
             else:
                 try:
