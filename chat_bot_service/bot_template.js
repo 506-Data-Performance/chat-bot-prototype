@@ -1,119 +1,50 @@
-// Define custom configuration directly
+/**
+ * Chat Bot for Web Integration
+ * Version: 1.0.1
+ * Last Updated: April 30, 2025
+ *
+ * This file contains the chat bot implementation that can be
+ * embedded into any website using a simple script tag.
+ */
+
+// Configuration - this will be replaced during updates
 const myCustomConfig = {
-  // Logo and brand information
-  LOGO_URL: "https://www.506.ai/app/uploads/2024/05/logo.svg",
-  CHAT_TITLE: "CompanyGPT",
-  CHAT_SUBTITLE: "Hier steht noch etwas Infotext",
-
-  // Assistant-picker intro text (brandable)
+  LOGO_URL: "https://placeholder.com/logo.png",
+  CHAT_TITLE: "Chat Bot",
+  CHAT_SUBTITLE: "Your virtual assistant",
   PICKER_GREETING: {
-    LINE1: "Hallo 506 🚀",
-    LINE2: "Wie können wir helfen?",
+    LINE1: "Hello!",
+    LINE2: "How can I help you?",
     DESCRIPTION:
-      "Hier steht etwas Text bzgl. Auswahl Assistenten und so. Kann auch mehr Text sein.",
+      "I can answer questions about our services, products, and more.",
   },
-
-  // Color scheme - Customizable colors
   COLORS: {
-    primary: "#0062A2", // send-icon, floating button, input border
-    botBg: "#EAF8FD", // LLM bubble background
-    botText: "#253246", // LLM bubble text
-    userBg: "#0195D5", // user bubble background
-    userText: "#FFFFFF", // user bubble text
+    primary: "#0077cc",
+    botBg: "#f0f0f0",
+    botText: "#333333",
+    userBg: "#0077cc",
+    userText: "#ffffff",
   },
-
-  // UI text
   ERROR_MESSAGE: "Sorry, something went wrong. Please try again later.",
-  INPUT_PLACEHOLDER: "Eine Frage stellen...",
-
-  // API endpoint
-  API_ENDPOINT: "http://127.0.0.1:5000/api/v1/private/chat",
-
-  // Assistants configuration (1-5 assistants)
+  INPUT_PLACEHOLDER: "Type your question here...",
+  API_ENDPOINT: "https://api.example.com/chat",
   ASSISTANTS: [
     {
-      id: "HelpcenterHelper_1",
-      name: "506 Helpcenter Agent",
-      icon: "https://pbs.twimg.com/profile_images/1194735185625067522/iX2yq2mX_400x400.jpg",
-      welcome:
-        "Willkommen bei CompanyGPT! 🚀\nWie können wir dir heute weiterhelfen?",
+      id: "default-assistant",
+      name: "AI Assistant",
+      icon: "https://placeholder.com/icon.png",
+      welcome: "Hello! I'm your virtual assistant. How can I help you today?",
       suggestedQuestions: [
-        "Was ist im Enterprise Paket enthalten?",
-        "Wie sieht es mit Datenschutz aus?",
-        "Was sind die neuesten Funktionen?",
-      ],
-    },
-    {
-      id: "assistant-2",
-      name: "Assistent Name 2",
-      description: "Beschreibung Assistent",
-      icon: "https://pbs.twimg.com/profile_images/1194735185625067522/iX2yq2mX_400x400.jpg",
-      welcome: "Hallo, ich bin Assistent 2 – womit kann ich helfen?",
-      suggestedQuestions: [],
-    },
-  ],
-};
-
-const myCustomConfig2 = {
-  // Logo and brand information
-  LOGO_URL:
-    "https://i.etsystatic.com/52039034/r/il/16ca42/6052095256/il_794xN.6052095256_ltxd.jpg",
-  CHAT_TITLE: "TestBot",
-  CHAT_SUBTITLE: "Your test assistant",
-
-  // Assistant-picker intro text
-  PICKER_GREETING: {
-    LINE1: "Hello tester! 👋",
-    LINE2: "What would you like to test today?",
-    DESCRIPTION:
-      "This is a test configuration for the 506 chat widget. Select an assistant to begin testing.",
-  },
-
-  // Custom color scheme
-  COLORS: {
-    primary: "#FF6600", // Orange primary color
-    botBg: "#FFF3E0", // Light orange background
-    botText: "#333333", // Dark text for readability
-    userBg: "#FF8C33", // Lighter orange for user bubbles
-    userText: "#FFFFFF", // White text for contrast
-  },
-
-  // UI text
-  ERROR_MESSAGE: "Test error: Something went wrong. Please try again.",
-  INPUT_PLACEHOLDER: "Type your test message...",
-
-  // Keep the original API endpoint
-  API_ENDPOINT: "http://127.0.0.1:5000/api/v1/public/chat",
-
-  // Test assistants
-  ASSISTANTS: [
-    {
-      id: "test-assistant-1",
-      name: "Test Assistant",
-      icon: "https://cdn-icons-png.flaticon.com/512/1053/1053367.png",
-      welcome:
-        "Welcome to the test chat! 🧪\nI'm here to help you test the chat widget functionality.",
-      suggestedQuestions: [
-        "Test response formatting",
-        "Test long messages",
-        "Test error handling",
-      ],
-    },
-    {
-      id: "test-assistant-2",
-      name: "Debug Helper",
-      description: "For technical issues and debugging",
-      icon: "https://cdn-icons-png.flaticon.com/512/2621/2621040.png",
-      welcome: "Debug mode activated. What would you like to troubleshoot?",
-      suggestedQuestions: [
-        "Check API connection",
-        "Test response timing",
-        "Reset chat history",
+        "What services do you offer?",
+        "How can I contact you?",
+        "What are your hours?",
       ],
     },
   ],
 };
+// End of configuration
 
+// Immediately-invoked function expression with configurable options
 // Immediately-invoked function expression with configurable options
 (function (customConfig) {
   // Make sure customConfig is at least an empty object

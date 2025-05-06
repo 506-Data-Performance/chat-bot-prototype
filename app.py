@@ -50,4 +50,4 @@ if __name__ == "__main__":
     #host = os.environ.get("HOST")
     host = os.environ.get("HOST", "0.0.0.0") # for versel 
     app = create_app()
-    app.run(host=host, port=port, threaded=True, debug=True)
+    app.run(host=host, port=port, threaded=True, debug=False)

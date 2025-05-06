@@ -7,3 +7,4 @@ flask-cors==5.0.0
 
 
 gunicorn==21.2.0 # Specify the version if needed
+boto3==1.37.38
