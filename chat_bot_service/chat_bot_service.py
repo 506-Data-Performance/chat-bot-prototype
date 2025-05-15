@@ -55,6 +55,14 @@ def load_assistant_settings():
             "SELECTED_DATA_COLLECTIONS": ["9538e4e4-f168-42a2-9f0e-3edcddccb96e"],
             "TEMPERATURE": 0.7,
             "MODE": "QA"
+        },
+          "DemoBot_1": {
+            "MODEL_ID": "gpt-4o-mini",
+            "ROLE_ID": "e2084980-afe5-43de-9ec5-5febc568370e",  # "DemoBot_1" 
+            "SELECTED_FILES": [],
+            "SELECTED_DATA_COLLECTIONS": ["6106d18b-7e95-43e5-b4b7-58b6cb48a2da"],
+            "TEMPERATURE": 0.7,
+            "MODE": "QA"
         }
 
 
