@@ -83,7 +83,9 @@ const myCustomConfig2 = {
   INPUT_PLACEHOLDER: "Type your test message...",
 
   // Keep the original API endpoint
-  API_ENDPOINT: "http://127.0.0.1:5000/api/v1/public/chat",
+  //API_ENDPOINT: "http://127.0.0.1:5000/api/v1/public/chat",
+
+  API_ENDPOINT: "https://chat-bot-prototype.vercel.app/api/v1/public/chat",
 
   // Test assistants
   ASSISTANTS: [
@@ -109,6 +111,18 @@ const myCustomConfig2 = {
         "Check API connection",
         "Test response timing",
         "Reset chat history",
+      ],
+    },
+    {
+      id: "DemoBot_1",
+      name: "Demo Bot",
+      description: "For technical issues and debugging",
+      icon: "https://cdn-icons-png.flaticon.com/512/2621/2621040.png",
+      welcome: "Demo Bot der Webpage?",
+      suggestedQuestions: [
+        "Was steht in dem File?",
+        "Was ist deine Aufgabe",
+        "Unterstütze mich bei der Demo ",
       ],
     },
   ],
