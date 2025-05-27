@@ -29,7 +29,7 @@ const myCustomConfig = {
   // API endpoint
   API_ENDPOINT: "http://127.0.0.1:5000/api/v1/private/chat",
   // ?internalSystemPrompt=true&citation=false
-
+  // test
   // Assistants configuration (1-5 assistants)
   ASSISTANTS: [
     {
