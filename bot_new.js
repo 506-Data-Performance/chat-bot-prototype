@@ -27,7 +27,8 @@ const myCustomConfig = {
   INPUT_PLACEHOLDER: "Eine Frage stellen...",
 
   // API endpoint
-  API_ENDPOINT: "http://127.0.0.1:5000/api/v1/private/chat",
+  API_ENDPOINT: "http://127.0.0.1:5000/api/v1/private/chat",   
+  // ?internalSystemPrompt=true&citation=false
 
   // Assistants configuration (1-5 assistants)
   ASSISTANTS: [
