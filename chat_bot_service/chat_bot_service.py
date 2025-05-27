@@ -25,7 +25,7 @@ def load_assistant_settings():
     # Hardcoded assistant settings
     ASSISTANT_SETTINGS = {
         "test-assistant-1": {
-            "MODEL_ID": "gpt-4o-mini",
+            "MODEL_ID": "gpt-4o",
             "ROLE_ID": "c4da2c8e-dd83-4d68-a22b-31334a7cd6a3",
             "SELECTED_FILES": ["66df99f8-1abe-4c8a-96ee-56edef357536_tester_file.pdf"],
             "SELECTED_DATA_COLLECTIONS": [],
@@ -33,7 +33,7 @@ def load_assistant_settings():
             "MODE": "BASIC"
         },
         "test-assistant-2": {
-            "MODEL_ID": "gpt-4o-mini",
+            "MODEL_ID": "gpt-4o",
             "ROLE_ID": "8643d3f1-37c3-4ed3-87f7-ffeffac40db7",
             "SELECTED_FILES": ["66df99f8-1abe-4c8a-96ee-56edef357536_debug_file.pdf"],
             "SELECTED_DATA_COLLECTIONS": [],
@@ -41,7 +41,7 @@ def load_assistant_settings():
             "MODE": "QA"
         },
         "assistant-LinzAG-Sport": {
-            "MODEL_ID": "gpt-4o-mini",
+            "MODEL_ID": "gpt-4o",
             "ROLE_ID": "1234abcd-5678-efgh-ijkl-9012mnop3456",
             "SELECTED_FILES": ["66df99f8-1abe-4c8a-96ee-56edef357536_LinzAG_sport.docx"],
             "SELECTED_DATA_COLLECTIONS": [],
@@ -49,7 +49,7 @@ def load_assistant_settings():
             "MODE": "BASIC"
         },
         "HelpcenterHelper_1": {
-            "MODEL_ID": "gpt-4o-mini",
+            "MODEL_ID": "gpt-4o",
             "ROLE_ID": "337f25d4-6bb0-4636-8997-f148b0db2980",  # "HelpcenterHelper_1" 
             "SELECTED_FILES": [],
             "SELECTED_DATA_COLLECTIONS": ["9538e4e4-f168-42a2-9f0e-3edcddccb96e"],
@@ -57,7 +57,7 @@ def load_assistant_settings():
             "MODE": "QA"
         },
          "HelpcenterHelper_2": {
-            "MODEL_ID": "gpt-4o-mini",
+            "MODEL_ID": "gpt-4o",
             "ROLE_ID": "f9eb7ec2-ef8a-4953-9ed9-7bc5243e93a9",  # "HelpcenterHelper_2" 
             "SELECTED_FILES": [],
             "SELECTED_DATA_COLLECTIONS": ["07590988-04df-4bf9-ba6a-a8b3ca1cc736"],
@@ -65,7 +65,7 @@ def load_assistant_settings():
             "MODE": "QA"
         },
           "DemoBot_1": {
-            "MODEL_ID": "gpt-4o-mini",
+            "MODEL_ID": "gpt-4o",
             "ROLE_ID": "e2084980-afe5-43de-9ec5-5febc568370e",  # "DemoBot_1" 
             "SELECTED_FILES": [],
             "SELECTED_DATA_COLLECTIONS": ["6106d18b-7e95-43e5-b4b7-58b6cb48a2da"],
