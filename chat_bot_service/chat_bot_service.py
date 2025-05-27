@@ -22,7 +22,6 @@ def load_assistant_settings():
     """
     global ASSISTANT_SETTINGS
     
-    
     # Hardcoded assistant settings
     ASSISTANT_SETTINGS = {
         "test-assistant-1": {
