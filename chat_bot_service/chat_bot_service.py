@@ -264,6 +264,7 @@ class ChatBotService:
         @cross_origin(origins=self.private_cors_origins)
         def update_bot_config():
             try:
+                
                 # Get data from request body
                 data = request.json
                 if not data or 'config' not in data:
