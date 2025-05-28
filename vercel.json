@@ -2,10 +2,5 @@
   "version": 2,
   "builds": [{ "src": "app.py", "use": "@vercel/python" }],
   "routes": [{ "src": "/(.*)", "dest": "app.py" }],
-  "regions": ["fra1"],
-  "functions": {
-    "app.py": {
-      "maxDuration": 60
-    }
-  }
+  "regions": ["fra1"]
 }
