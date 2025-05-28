@@ -616,6 +616,38 @@ const myCustomConfig = {
         line-height: ${CONFIG.FONTS.messageTextLineHeight};
         letter-spacing: ${CONFIG.FONTS.messageTextSpacing};
       }
+
+      .bot-message-bubble ul,
+      .bot-message-bubble ol {
+        margin: 8px 0;
+      }
+
+      .bot-message-bubble li {
+        margin: 4px 0;
+        line-height: 1.4;
+      }
+
+      /* Ensure nested lists have proper spacing */
+      .bot-message-bubble ul ul,
+      .bot-message-bubble ol ol,
+      .bot-message-bubble ul ol,
+      .bot-message-bubble ol ul {
+        margin: 4px 0;
+        padding-left: 16px;
+      }
+
+      /* Optional: Custom bullet styling */
+      .bot-message-bubble ul {
+        list-style-type: disc;
+      }
+
+      .bot-message-bubble ul ul {
+        list-style-type: circle;
+      }
+
+      .bot-message-bubble ol {
+        list-style-type: decimal;
+      }
       
       .agent-info-container {
         display: flex;
@@ -803,28 +835,58 @@ const myCustomConfig = {
         border-width: 0;
       }
   
+      /* Responsive adjustments for different screen heights */
+      @media (max-height: 800px) and (min-width: 481px) {
+        .chat-container {
+          height: calc(100vh - 120px); /* Leave space for button and margins */
+          max-height: 650px;
+          bottom: 80px;
+        }
+      }
+
       @media (max-height: 700px) and (min-width: 481px) {
         .chat-container {
-          height: 80vh; /* Limit height to 80% of viewport height */
-          max-height: 600px; /* Set a maximum height */
-          bottom: 70px; /* Adjust bottom position to keep it above the chat button */
+          height: calc(100vh - 100px);
+          max-height: 580px;
+          bottom: 70px;
         }
       }
-  
+
+      @media (max-height: 600px) and (min-width: 481px) {
+        .chat-container {
+          height: calc(100vh - 80px);
+          max-height: 500px;
+          bottom: 60px;
+        }
+      }
+
       @media (max-height: 500px) and (min-width: 481px) {
         .chat-container {
-          height: 70vh; /* Even smaller height percentage */
-          bottom: 60px; /* Move slightly higher */
+          height: calc(100vh - 70px);
+          max-height: 420px;
+          bottom: 50px;
         }
       }
-      
+
+      /* Very small heights - prioritize visibility */
+      @media (max-height: 400px) and (min-width: 481px) {
+        .chat-container {
+          height: calc(100vh - 60px);
+          bottom: 40px;
+          top: 10px; /* Add top constraint to prevent overflow */
+        }
+      }
+
+      /* Mobile devices - full screen */
       @media (max-width: 480px) {
         .chat-container {
           width: 100%;
           height: 100%;
           bottom: 0;
           right: 0;
+          top: 0;
           border-radius: 0;
+          max-height: none;
         }
         
         .chat-header {
