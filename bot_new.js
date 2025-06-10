@@ -39,9 +39,9 @@ const myCustomConfig = {
       name: "506 Helpcenter Agent",
       icon: "https://pbs.twimg.com/profile_images/1194735185625067522/iX2yq2mX_400x400.jpg",
       welcome:
-        "Willkommen bei CompanyGPT! 🚀\nWie können wir dir heute weiterhelfen?",
+        "Willkommen bei CompanyGPT! 🚀\n Wie können wir dir heute weiterhelfen?",
       suggestedQuestions: [
-        "Was ist im Enterprise Paket enthalten?",
+        "Was ist im Enterprise Paket enthalten reihe bitte in punkten auf?",
         "Wie sieht es mit Datenschutz aus?",
         "Was sind die neuesten Funktionen?",
       ],
@@ -565,7 +565,7 @@ const myCustomConfig2 = {
         border-radius: ${CONFIG.UI.inputFieldRadius};
         padding: 0 16px;
         position: relative;
-        height: ${CONFIG.UI.inputFieldHeight};
+        min-height: ${CONFIG.UI.inputFieldHeight};  /* Changed from height to min-height */
         width: ${CONFIG.UI.inputFieldWidth};
       }
       
@@ -582,6 +582,10 @@ const myCustomConfig2 = {
         letter-spacing: ${CONFIG.FONTS.messageTextSpacing};
         color: ${CONFIG.COLORS.darkText};
         background: transparent;
+        resize: none;
+        overflow-y: auto;  /* Changed from hidden to auto - allows scrolling */
+        min-height: 20px;
+        max-height: 60px;  /* Increased from 40px to 60px - allows ~3 lines */
       }
   
       // Suggested questions styles
@@ -600,23 +604,28 @@ const myCustomConfig2 = {
       width: 100%;
     }
   
-    .suggested-question-bubble {
-      display: inline-block;
-      padding: 8px 16px;
-      background: #FFFFFF;
-      border: 1px solid ${CONFIG.COLORS.primary};
-      border-radius: 18px;
-      color: ${CONFIG.COLORS.primary};
-      font-family: ${CONFIG.FONTS.defaultFont};
-      font-size: 14px;
-      font-weight: 400;
-      cursor: pointer;
-      transition: background-color 0.2s, transform 0.1s;
-      white-space: nowrap;
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+  .suggested-question-bubble {
+    display: inline-block;
+    padding: 8px 16px;
+    background: #FFFFFF;
+    border: 1px solid ${CONFIG.COLORS.primary};
+    border-radius: 18px;
+    color: ${CONFIG.COLORS.primary};
+    font-family: ${CONFIG.FONTS.defaultFont};
+    font-size: 14px;
+    font-weight: 400;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    white-space: normal;  /* Changed from nowrap to normal - allows wrapping */
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;  /* Add these for multi-line ellipsis */
+    -webkit-line-clamp: 2;  /* Limit to 2 lines */
+    -webkit-box-orient: vertical;
+    line-height: 1.4;  /* Add line height for better spacing */
+    min-height: 36px;  /* Ensure consistent height */
+  }
   
   .suggested-question-bubble:hover {
     background: ${CONFIG.COLORS.botBg};
@@ -1120,10 +1129,11 @@ const myCustomConfig2 = {
   inputBar.appendChild(inputFieldContainer);
 
   // Input field
-  const inputField = document.createElement("input");
+  const inputField = document.createElement("textarea"); // Changed from "input" to "textarea"
   inputField.className = "input-field";
   inputField.placeholder = CONFIG.INPUT_PLACEHOLDER;
   inputField.setAttribute("aria-label", "Message input");
+  inputField.rows = 1; // Add this line
   inputFieldContainer.appendChild(inputField);
 
   // Send button
@@ -1717,6 +1727,10 @@ const myCustomConfig2 = {
   // Show/hide send button based on input
   inputField.addEventListener("input", () => {
     sendButton.style.display = inputField.value.trim() ? "flex" : "none";
+
+    // Auto-resize textarea
+    inputField.style.height = "auto";
+    inputField.style.height = Math.min(inputField.scrollHeight, 60) + "px"; // Changed from 40 to 60
   });
 
   // Send message on button click
@@ -1859,3 +1873,98 @@ const myCustomConfig2 = {
 
   console.log("Improved 506.ai Shadow DOM Chatbot initialized!");
 })(myCustomConfig);
+
+/*
+
+
+{
+  
+  "config": {
+  "LOGO_URL": "https://www.506.ai/app/uploads/2024/05/logo.svg",
+  "CHAT_TITLE": "CompanyGPT",
+  "CHAT_SUBTITLE": "Schnelle Unterstützung bei Fragen",
+  "PICKER_GREETING": {
+    "LINE1": "Hallo lieber Kunde,",
+    "LINE2": "Wie kann ich Dir helfen?",
+    "DESCRIPTION": "Bitte wähle einen Assistenten, um fortzufahren. Jeder Assistent ist auf bestimmte Anliegen spezialisiert."
+  },
+  "COLORS": {
+    "primary": "#0062A2",
+    "botBg": "#EAF8FD",
+    "botText": "#253246",
+    "userBg": "#0195D5",
+    "userText": "#FFFFFF"
+  },
+  "ERROR_MESSAGE": "Sorry, something went wrong. Please try again later.",
+  "INPUT_PLACEHOLDER": "Eine Frage stellen...",
+  "API_ENDPOINT": "https://chat-bot-prototype.vercel.app/api/v1/public/chat",
+  "ASSISTANTS": [
+    {
+      "id": "HelpcenterHelper_2",
+      "name": "Datenschutz Assistent",
+      "description": "Hier bekommst du Antworten zum Thema Datenschutz.",
+      "icon": "https://pbs.twimg.com/profile_images/1194735185625067522/iX2yq2mX_400x400.jpg",
+      "welcome": "Willkommen bei CompanyGPT! \n Ich weiß alles zum Themen Datenschutz und CompanyGPT.\n Wie kann ich Dir helfen?",
+      "suggestedQuestions": [
+        "Wie ist die Client-Verbindung gesichert?",
+        "Welche AWS-Sicherheitsmaßnahmen gibt es?",
+        "Wie wird die Datenbanksicherheit gewährleistet?"
+      ]
+    },
+    {
+      "id": "DemoBot_1",
+      "name": "Demo Assistent",
+      "description": "Dieser Assistent hilft Dir bei Deinen Fragen.",
+      "icon": "https://pbs.twimg.com/profile_images/1194735185625067522/iX2yq2mX_400x400.jpg",
+      "welcome": "Willkommen bei CompanyGPT! \n Wie kann ich Dir helfen?",
+      "suggestedQuestions": [ ]
+    }
+  ]
+}
+
+,
+  "key": "bot-720a7ce2e4aa4de48122801082aaeaed.js"
+}*/
+
+// linzag config
+
+/* 
+
+{
+  
+  "config": {
+  "LOGO_URL": "https://www.facebook.com/photo/?fbid=586162243673688",
+  "CHAT_TITLE": "FITNESS & POWER",
+  "CHAT_SUBTITLE": "Dein virtueller Assistent",
+  "PICKER_GREETING": {
+    "LINE1": "Hallo Sportfreund! 💪",
+    "LINE2": "Wie können wir dir helfen?",
+    "DESCRIPTION": "Hier findest du Antworten zu unseren Angeboten, Kursen, Öffnungszeiten und allem rund um die Sektion Fitness & Power."
+  },
+  "COLORS": {
+    "primary": "#005caa",
+    "botBg": "#EAF8FD",
+    "botText": "#253246",
+    "userBg": "#0195D5",
+    "userText": "#FFFFFF"
+  },
+  "ERROR_MESSAGE": "Entschuldigung, etwas ist schiefgelaufen. Bitte versuche es später noch einmal.",
+  "INPUT_PLACEHOLDER": "Stelle eine Frage zum Sportverein...",
+  "API_ENDPOINT": "https://chat-bot-prototype-4ekf.vercel.app/api/v1/private/chat",
+  "ASSISTANTS": [
+    {
+      "id": "assistant-LinzAG-Sport",
+      "name": "AI Assistant",
+      "icon": "https://www.facebook.com/photo/?fbid=586162243673688",
+      "welcome": "Willkommen bei der Sektion Fitness & Power der LinzAG! 💪\n\nIch bin dein virtueller Assistent und beantworte gerne deine Fragen zu unseren Angeboten, Öffnungszeiten und Mitgliedschaften. Wie kann ich dir heute helfen?",
+      "suggestedQuestions": [
+        "Wann findet das Sommerfest statt?",
+        "Wie kann ich der Sektion beitreten?",
+        "Wie sind die Öffnungszeiten?"
+      ]
+    }
+  ]
+}
+,
+  "key": "bot.js"
+}*/

@@ -46,6 +46,7 @@ const myCustomConfig = {
 
 // Immediately-invoked function expression with configurable options
 // Immediately-invoked function expression with configurable options
+// Immediately-invoked function expression with configurable options
 (function (customConfig) {
   // Make sure customConfig is at least an empty object
   customConfig = customConfig || {};
@@ -479,7 +480,7 @@ const myCustomConfig = {
         border-radius: ${CONFIG.UI.inputFieldRadius};
         padding: 0 16px;
         position: relative;
-        height: ${CONFIG.UI.inputFieldHeight};
+        min-height: ${CONFIG.UI.inputFieldHeight};  /* Changed from height to min-height */
         width: ${CONFIG.UI.inputFieldWidth};
       }
       
@@ -496,6 +497,10 @@ const myCustomConfig = {
         letter-spacing: ${CONFIG.FONTS.messageTextSpacing};
         color: ${CONFIG.COLORS.darkText};
         background: transparent;
+        resize: none;
+        overflow-y: auto;  /* Changed from hidden to auto - allows scrolling */
+        min-height: 20px;
+        max-height: 60px;  /* Increased from 40px to 60px - allows ~3 lines */
       }
   
       // Suggested questions styles
@@ -514,23 +519,28 @@ const myCustomConfig = {
       width: 100%;
     }
   
-    .suggested-question-bubble {
-      display: inline-block;
-      padding: 8px 16px;
-      background: #FFFFFF;
-      border: 1px solid ${CONFIG.COLORS.primary};
-      border-radius: 18px;
-      color: ${CONFIG.COLORS.primary};
-      font-family: ${CONFIG.FONTS.defaultFont};
-      font-size: 14px;
-      font-weight: 400;
-      cursor: pointer;
-      transition: background-color 0.2s, transform 0.1s;
-      white-space: nowrap;
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+  .suggested-question-bubble {
+    display: inline-block;
+    padding: 8px 16px;
+    background: #FFFFFF;
+    border: 1px solid ${CONFIG.COLORS.primary};
+    border-radius: 18px;
+    color: ${CONFIG.COLORS.primary};
+    font-family: ${CONFIG.FONTS.defaultFont};
+    font-size: 14px;
+    font-weight: 400;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    white-space: normal;  /* Changed from nowrap to normal - allows wrapping */
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;  /* Add these for multi-line ellipsis */
+    -webkit-line-clamp: 2;  /* Limit to 2 lines */
+    -webkit-box-orient: vertical;
+    line-height: 1.4;  /* Add line height for better spacing */
+    min-height: 36px;  /* Ensure consistent height */
+  }
   
   .suggested-question-bubble:hover {
     background: ${CONFIG.COLORS.botBg};
@@ -1034,10 +1044,11 @@ const myCustomConfig = {
   inputBar.appendChild(inputFieldContainer);
 
   // Input field
-  const inputField = document.createElement("input");
+  const inputField = document.createElement("textarea"); // Changed from "input" to "textarea"
   inputField.className = "input-field";
   inputField.placeholder = CONFIG.INPUT_PLACEHOLDER;
   inputField.setAttribute("aria-label", "Message input");
+  inputField.rows = 1; // Add this line
   inputFieldContainer.appendChild(inputField);
 
   // Send button
@@ -1631,6 +1642,10 @@ const myCustomConfig = {
   // Show/hide send button based on input
   inputField.addEventListener("input", () => {
     sendButton.style.display = inputField.value.trim() ? "flex" : "none";
+
+    // Auto-resize textarea
+    inputField.style.height = "auto";
+    inputField.style.height = Math.min(inputField.scrollHeight, 60) + "px"; // Changed from 40 to 60
   });
 
   // Send message on button click
