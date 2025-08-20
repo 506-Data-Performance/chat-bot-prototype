@@ -192,6 +192,15 @@ class ChatBotService:
         @api_bp.route('/v1/public/chat', methods=['POST'])
         @cross_origin(origins=self.public_cors_origins)
         def public_chat():
+            # Print raw body
+            print("Raw body:", request.get_data(as_text=True))
+
+            # Or, if you expect JSON
+            try:
+                print("JSON body:", request.get_json())
+            except Exception as e:
+                print("Could not parse JSON:", e)
+
             return self._handle_chat_request()
         
         # Private chat endpoint
@@ -400,8 +409,7 @@ class ChatBotService:
                 "selectedFiles": assistant_config["SELECTED_FILES"],
                 "selectedDataCollections": assistant_config["SELECTED_DATA_COLLECTIONS"],
             }
-
-            print("Handling chat request with payload:", json.dumps(payload, indent=2))
+            print(payload)
 
             # ---- env sanity & masking ----
             print("API_URL set:", bool(self.API_URL),
