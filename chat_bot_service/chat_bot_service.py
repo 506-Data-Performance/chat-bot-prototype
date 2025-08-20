@@ -401,6 +401,8 @@ class ChatBotService:
                 "selectedDataCollections": assistant_config["SELECTED_DATA_COLLECTIONS"],
             }
 
+            print("Handling chat request with payload:", json.dumps(payload, indent=2))
+
             # ---- env sanity & masking ----
             print("API_URL set:", bool(self.API_URL),
                 "API_KEY len:", len(self.API_KEY or ""),
