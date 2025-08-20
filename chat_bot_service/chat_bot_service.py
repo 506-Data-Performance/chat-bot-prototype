@@ -22,7 +22,7 @@ def load_assistant_settings():
     """
     global ASSISTANT_SETTINGS
     
-    # Hardcoded assistant  settings
+    # Hardcoded assistant settings
     ASSISTANT_SETTINGS = {
         "test-assistant-1": {
             "MODEL_ID": "gpt-4o",
@@ -374,10 +374,13 @@ class ChatBotService:
             
         return api_bp
     
+    
+
     def _handle_chat_request(self):
         """
         Common chat handling logic for both public and private endpoints
         """
+        from urllib.parse import urlparse
         try:
             data = request.json
             if not data:
@@ -398,6 +401,7 @@ class ChatBotService:
                 "selectedDataCollections": assistant_config["SELECTED_DATA_COLLECTIONS"],
             }
 
+            # ---- env sanity & masking ----
             print("API_URL set:", bool(self.API_URL),
                 "API_KEY len:", len(self.API_KEY or ""),
                 "ORG len:", len(self.API_ORGANIZATION_ID or ""))
@@ -405,34 +409,52 @@ class ChatBotService:
             if not self.API_URL or not self.API_KEY:
                 return jsonify({"error": "Server misconfigured: missing API_URL or API_KEY"}), 500
 
-            # --- EXPERIMENT A: Use Authorization: Bearer (most common) ---
+            upstream_host = urlparse(self.API_URL).netloc
+            print("Upstream host:", upstream_host)
+
+            # Strip accidental spaces/newlines in envs (common in dashboards)
+            raw_key = self.API_KEY or ""
+            key = raw_key.strip()
+            if key != raw_key:
+                print("API_KEY had surrounding whitespace; using stripped value.")
+            raw_org = self.API_ORGANIZATION_ID or ""
+            org = raw_org.strip()
+            if org != raw_org:
+                print("API_ORGANIZATION_ID had surrounding whitespace; using stripped value.")
+
+            # ---- headers for API-key scheme (as used locally) ----
             headers = {
                 "Content-Type": "application/json",
-                "Authorization": f"Bearer {self.API_KEY}",
+                "api-key": key,  # exact header name your API expects
             }
-            # If your API needs an org header, set the exact name they document:
-            if self.API_ORGANIZATION_ID:
-                headers["X-Organization-Id"] = self.API_ORGANIZATION_ID  # rename if docs use a different key
+            if org:
+                headers["api-organization-id"] = org  # exact header name your API expects
 
-            # --- EXPERIMENT B: mimic browser origin (helps if key is origin-bound) ---
-            # Comment these two lines out if your provider doesn’t want them.
+            # Optional: some providers bind the key to a site; harmless to include
             headers["Origin"] = "https://www.506.ai"
             headers["Referer"] = "https://www.506.ai/"
 
-            print("Request headers to upstream:", headers)
+            # Log header names & masked values (no secrets)
+            print({
+                "sending_headers": list(headers.keys()),
+                "api_key_tail": key[-6:],
+                "org_tail": org[-6:] if org else "",
+            })
 
-            response = requests.post(self.API_URL, json=payload, headers=headers, stream=True)
+            # ---- call upstream ----
+            response = requests.post(self.API_URL, json=payload, headers=headers, stream=True, timeout=30)
 
-            # Extra logging: status, first 400 chars, and response headers
-            print("Upstream status:", response.status_code,
-                "body:", (response.text[:400] if hasattr(response, "text") else "no text"))
+            # verbose diagnostics to compare local vs vercel
             try:
+                print("Upstream status:", response.status_code)
                 print("Upstream response headers:", dict(response.headers))
+                body_preview = response.text[:400] if hasattr(response, "text") else ""
+                print("Upstream body (first 400):", body_preview)
             except Exception:
                 pass
 
             if response.status_code == 200:
-                # Process SSE-like "data:" lines
+                # Process streaming "data:" lines (SSE-like)
                 response_text = ""
                 for line in response.iter_lines():
                     if not line:
@@ -448,12 +470,16 @@ class ChatBotService:
             except ValueError:
                 error_details = {"error": "Non-JSON response", "details": response.text}
 
+            # Helpful hint if the upstream is asking for Bearer
+            www = response.headers.get("WWW-Authenticate", "")
+            if response.status_code == 401 and "Bearer" in www:
+                error_details["hint"] = "Upstream expects a Bearer JWT. Your API key is not a JWT. Check provider docs or use OAuth2."
+
             return jsonify({"error": "API call failed", "details": error_details}), response.status_code
 
         except Exception as e:
             print("Exception in _handle_chat_request:", str(e))
             return jsonify({"error": str(e)}), 500
-
 
 
 # Load assistant settings when the module is imported
