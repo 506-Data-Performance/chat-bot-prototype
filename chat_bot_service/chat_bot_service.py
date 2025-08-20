@@ -394,75 +394,98 @@ class ChatBotService:
             data = request.json
             if not data:
                 return jsonify({"error": "Request body must contain JSON data"}), 400
-
+            
             assistant_id = data.get("assistantId")
             if assistant_id not in ASSISTANT_SETTINGS:
                 return jsonify({"error": f"Assistant ID '{assistant_id}' not found in configuration"}), 400
-
+            
             assistant_config = ASSISTANT_SETTINGS[assistant_id]
+            
+            # ========== TRANSFORM MESSAGES FOR BACKEND ==========
+            def transform_messages_for_backend(messages):
+                """Transform frontend messages to backend format"""
+                transformed = []
+                for msg in messages:
+                    # Skip empty messages
+                    if not msg.get("content"):
+                        continue
+                    
+                    # Transform role: bot -> assistant
+                    role = msg.get("role", "user")
+                    if role == "bot":
+                        role = "assistant"
+                    
+                    # Clean message - only keep role and content
+                    clean_msg = {
+                        "role": role,
+                        "content": msg.get("content", "")
+                    }
+                    
+                    # Skip error messages from previous failed attempts
+                    if "Sorry, something went wrong" not in clean_msg["content"]:
+                        transformed.append(clean_msg)
+                
+                return transformed
+            
+            # Transform messages before sending
+            cleaned_messages = transform_messages_for_backend(data.get("messages", []))
+            
             payload = {
                 "model": {"id": assistant_config["MODEL_ID"]},
-                "messages": data.get("messages", []),
+                "messages": cleaned_messages,
                 "roleId": assistant_config["ROLE_ID"],
                 "temperature": assistant_config["TEMPERATURE"],
                 "selectedMode": assistant_config["MODE"],
                 "selectedFiles": assistant_config["SELECTED_FILES"],
                 "selectedDataCollections": assistant_config["SELECTED_DATA_COLLECTIONS"],
             }
-            print(payload)
-
+            
+            print("Transformed payload for backend:", payload)
+            
             # ---- env sanity & masking ----
             print("API_URL set:", bool(self.API_URL),
                 "API_KEY len:", len(self.API_KEY or ""),
                 "ORG len:", len(self.API_ORGANIZATION_ID or ""))
-
+            
             if not self.API_URL or not self.API_KEY:
                 return jsonify({"error": "Server misconfigured: missing API_URL or API_KEY"}), 500
-
+            
             upstream_host = urlparse(self.API_URL).netloc
             print("Upstream host:", upstream_host)
-
-            # Strip accidental spaces/newlines in envs (common in dashboards)
+            
+            # Strip accidental spaces/newlines in envs
             raw_key = self.API_KEY or ""
             key = raw_key.strip()
             if key != raw_key:
                 print("API_KEY had surrounding whitespace; using stripped value.")
+            
             raw_org = self.API_ORGANIZATION_ID or ""
             org = raw_org.strip()
             if org != raw_org:
                 print("API_ORGANIZATION_ID had surrounding whitespace; using stripped value.")
-
-            # ---- headers for API-key scheme (as used locally) ----
+            
+            # ---- headers for API-key scheme ----
             headers = {
                 "Content-Type": "application/json",
-                "api-key": key,  # exact header name your API expects
+                "api-key": key,
+                "api-organization-id": org,
+                "Origin": "https://www.506.ai",
+                "Referer": "https://www.506.ai/"
             }
-            if org:
-                headers["api-organization-id"] = org  # exact header name your API expects
-
-            # Optional: some providers bind the key to a site; harmless to include
-            headers["Origin"] = "https://www.506.ai"
-            headers["Referer"] = "https://www.506.ai/"
-
-            # Log header names & masked values (no secrets)
+            
             print({
                 "sending_headers": list(headers.keys()),
                 "api_key_tail": key[-6:],
                 "org_tail": org[-6:] if org else "",
             })
-
+            
             # ---- call upstream ----
             response = requests.post(self.API_URL, json=payload, headers=headers, stream=True, timeout=30)
-
-            # verbose diagnostics to compare local vs vercel
-            try:
-                print("Upstream status:", response.status_code)
-                print("Upstream response headers:", dict(response.headers))
-                body_preview = response.text[:400] if hasattr(response, "text") else ""
-                print("Upstream body (first 400):", body_preview)
-            except Exception:
-                pass
-
+            
+            # verbose diagnostics
+            print("Upstream status:", response.status_code)
+            print("Upstream response headers:", dict(response.headers))
+            
             if response.status_code == 200:
                 # Process streaming "data:" lines (SSE-like)
                 response_text = ""
@@ -472,24 +495,33 @@ class ChatBotService:
                     decoded_line = line.decode("utf-8", errors="ignore")
                     if decoded_line.startswith("data:"):
                         response_text += decoded_line[5:].strip() + "\n"
-                return jsonify({"response": response_text.strip()}), 200
-
+                
+                # ========== TRANSFORM RESPONSE FOR FRONTEND ==========
+                # The frontend expects the bot's response with role: "bot"
+                # We need to return in the format the frontend expects
+                frontend_response = {
+                    "response": response_text.strip(),
+                    "role": "bot"  # Frontend expects "bot" not "assistant"
+                }
+                
+                return jsonify(frontend_response), 200
+            
             # Forward error body if possible
             try:
                 error_details = response.json()
             except ValueError:
-                error_details = {"error": "Non-JSON response", "details": response.text}
-
-            # Helpful hint if the upstream is asking for Bearer
+                error_details = {"error": "Non-JSON response", "details": response.text[:400]}
+            
+            # Check for auth issues
             www = response.headers.get("WWW-Authenticate", "")
             if response.status_code == 401 and "Bearer" in www:
-                error_details["hint"] = "Upstream expects a Bearer JWT. Your API key is not a JWT. Check provider docs or use OAuth2."
-
+                error_details["hint"] = "Upstream expects a Bearer JWT. Your API key is not a JWT."
+            
             return jsonify({"error": "API call failed", "details": error_details}), response.status_code
-
+            
         except Exception as e:
             print("Exception in _handle_chat_request:", str(e))
-            return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 
 # Load assistant settings when the module is imported
