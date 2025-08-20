@@ -22,7 +22,7 @@ def load_assistant_settings():
     """
     global ASSISTANT_SETTINGS
     
-    # Hardcoded assistant settings
+    # Hardcoded assistant  settings
     ASSISTANT_SETTINGS = {
         "test-assistant-1": {
             "MODEL_ID": "gpt-4o",
@@ -382,55 +382,79 @@ class ChatBotService:
             data = request.json
             if not data:
                 return jsonify({"error": "Request body must contain JSON data"}), 400
-            
-            # Get assistant ID from request
+
+            # ---------- basic input checks ----------
             assistant_id = data.get("assistantId")
-            
-            # Check if assistant ID exists in settings
             if assistant_id not in ASSISTANT_SETTINGS:
                 return jsonify({
                     "error": f"Assistant ID '{assistant_id}' not found in configuration"
                 }), 400
-            
-            # Get configuration for this assistant
+
             assistant_config = ASSISTANT_SETTINGS[assistant_id]
-            
             payload = {
                 "model": {"id": assistant_config["MODEL_ID"]},
                 "messages": data.get("messages", []),
-                "roleId": assistant_config["ROLE_ID"], 
+                "roleId": assistant_config["ROLE_ID"],
                 "temperature": assistant_config["TEMPERATURE"],
                 "selectedMode": assistant_config["MODE"],
                 "selectedFiles": assistant_config["SELECTED_FILES"],
-                "selectedDataCollections": assistant_config["SELECTED_DATA_COLLECTIONS"]
+                "selectedDataCollections": assistant_config["SELECTED_DATA_COLLECTIONS"],
             }
-            
+
+            # ---------- env / config sanity prints ----------
+            print("API_URL set:", bool(self.API_URL),
+                "API_KEY len:", len(self.API_KEY or ""),
+                "ORG len:", len(self.API_ORGANIZATION_ID or ""))
+
+            if not self.API_URL or not self.API_KEY:
+                return jsonify({"error": "Server misconfigured: missing API_URL or API_KEY"}), 500
+
+            # ---------- headers ----------
+            # NOTE: adjust these names to whatever your upstream expects!
             headers = {
                 "Content-Type": "application/json",
+                # If your upstream expects 'Authorization: Bearer ...', use this:
+                # "Authorization": f"Bearer {self.API_KEY}",
+                # If your upstream expects 'api-key: ...', keep the next line and remove Authorization:
                 "api-key": self.API_KEY,
-                "api-organization-id": self.API_ORGANIZATION_ID
             }
-            
-            # Send the POST request to the API
+            if self.API_ORGANIZATION_ID:
+                # rename the header key if your upstream uses a different one
+                headers["api-organization-id"] = self.API_ORGANIZATION_ID
+
+            print("Request headers to upstream:", headers)
+
+            # ---------- call upstream ----------
             response = requests.post(self.API_URL, json=payload, headers=headers, stream=True)
-            
+
+            print("Upstream status:", response.status_code,
+                "body:", (response.text[:400] if hasattr(response, "text") else "no text"))
+
             if response.status_code == 200:
                 # Process the streaming response to extract `data:` fields
                 response_text = ""
                 for line in response.iter_lines():
-                    decoded_line = line.decode("utf-8")
+                    if not line:
+                        continue
+                    decoded_line = line.decode("utf-8", errors="ignore")
                     if decoded_line.startswith("data:"):
                         response_text += decoded_line[5:].strip() + "\n"
-                
+
                 return jsonify({"response": response_text.strip()}), 200
-            else:
-                try:
-                    error_details = response.json()
-                except ValueError:
-                    error_details = {"error": "Non-JSON response", "details": response.text}
-                return jsonify({"error": "API call failed", "details": error_details}), response.status_code
+
+            # non-200 → try to forward details
+            try:
+                error_details = response.json()
+            except ValueError:
+                error_details = {"error": "Non-JSON response", "details": response.text}
+
+            return jsonify({"error": "API call failed", "details": error_details}), response.status_code
+
         except Exception as e:
+            # last-resort error
+            print("Exception in _handle_chat_request:", str(e))
             return jsonify({"error": str(e)}), 500
+
 
 # Load assistant settings when the module is imported
 load_assistant_settings()
