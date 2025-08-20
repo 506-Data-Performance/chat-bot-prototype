@@ -5,11 +5,17 @@ import pathlib
 from flask_cors import CORS, cross_origin
 import requests
 from dotenv import load_dotenv
+import logging
+from urllib.parse import urlparse
 
 # Import the new AWS service
 from chat_bot_service.aws_service import AWSService
+
 # Load environment variables as early as possible
 load_dotenv()
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 # Global variable to store assistant settings
 ASSISTANT_SETTINGS = {}
@@ -50,32 +56,28 @@ def load_assistant_settings():
         },
         "HelpcenterHelper_1": {
             "MODEL_ID": "gpt-4o",
-            "ROLE_ID": "337f25d4-6bb0-4636-8997-f148b0db2980",  # "HelpcenterHelper_1" 
+            "ROLE_ID": "337f25d4-6bb0-4636-8997-f148b0db2980",
             "SELECTED_FILES": [],
             "SELECTED_DATA_COLLECTIONS": ["9538e4e4-f168-42a2-9f0e-3edcddccb96e"],
             "TEMPERATURE": 0.7,
             "MODE": "QA"
         },
-         "HelpcenterHelper_2": {
+        "HelpcenterHelper_2": {
             "MODEL_ID": "gpt-4o",
-            "ROLE_ID": "f9eb7ec2-ef8a-4953-9ed9-7bc5243e93a9",  # "HelpcenterHelper_2" 
+            "ROLE_ID": "f9eb7ec2-ef8a-4953-9ed9-7bc5243e93a9",
             "SELECTED_FILES": [],
             "SELECTED_DATA_COLLECTIONS": ["07590988-04df-4bf9-ba6a-a8b3ca1cc736"],
             "TEMPERATURE": 0.7,
             "MODE": "QA"
         },
-          "DemoBot_1": {
+        "DemoBot_1": {
             "MODEL_ID": "gpt-4o",
-            "ROLE_ID": "e2084980-afe5-43de-9ec5-5febc568370e",  # "DemoBot_1" 
+            "ROLE_ID": "e2084980-afe5-43de-9ec5-5febc568370e",
             "SELECTED_FILES": [],
             "SELECTED_DATA_COLLECTIONS": ["6106d18b-7e95-43e5-b4b7-58b6cb48a2da"],
             "TEMPERATURE": 0.7,
             "MODE": "QA"
         }
-
-
-
-
     }
     
     return ASSISTANT_SETTINGS
@@ -85,6 +87,14 @@ class ChatBotService:
     API_URL = os.getenv("API_URL")
     API_KEY = os.getenv("API_KEY")
     API_ORGANIZATION_ID = os.getenv("API_ORGANIZATION_ID")
+    
+    # Configuration constants
+    ERROR_PATTERNS = [
+        "Sorry, something went wrong",
+        "Es tut mir leid, ein Fehler ist aufgetreten",
+        "An error occurred",
+        "Error:",
+    ]
     
     def __init__(self, public_cors_origins=None, private_cors_origins=None, template_path=None):
         # Load environment variables
@@ -107,8 +117,8 @@ class ChatBotService:
         
         # Check if template exists
         if not os.path.exists(self.template_path):
-            print(f"Warning: Bot template not found at {self.template_path}")
-            print("Creating default template file...")
+            logger.warning(f"Bot template not found at {self.template_path}")
+            logger.info("Creating default template file...")
             self._create_default_template()
         
         # Initialize AWS service with template path
@@ -117,8 +127,8 @@ class ChatBotService:
         # Create the blueprint with all routes
         self.api = self._create_blueprint()
         
-        print("ChatBot service initialized.")
-        print(f"Using bot template: {self.template_path}")
+        logger.info("ChatBot service initialized.")
+        logger.info(f"Using bot template: {self.template_path}")
     
     def _create_default_template(self):
         """Create a default template file if none exists"""
@@ -131,7 +141,6 @@ class ChatBotService:
             * Chat Bot for Web Integration - Default Template
             * Version: 1.0.0
             */
-
             // Configuration - this will be replaced during updates
             const myCustomConfig = {
             "LOGO_URL": "https://placeholder.com/logo.png",
@@ -155,7 +164,6 @@ class ChatBotService:
             "ASSISTANTS": []
             };
             // End of configuration
-
             // Main chat bot code would go here
             (function() {
             console.log("Chat bot initialized with template config");
@@ -165,9 +173,179 @@ class ChatBotService:
             with open(self.template_path, 'w', encoding='utf-8') as f:
                 f.write(minimal_template)
             
-            print(f"Created default template at {self.template_path}")
+            logger.info(f"Created default template at {self.template_path}")
         except Exception as e:
-            print(f"Error creating default template: {str(e)}")
+            logger.error(f"Error creating default template: {str(e)}")
+    
+    def _transform_messages_for_backend(self, messages):
+        """
+        Transform frontend messages to backend format.
+        - Converts 'bot' role to 'assistant'
+        - Removes unnecessary fields (references, sources)
+        - Filters out error messages
+        """
+        transformed = []
+        
+        for msg in messages:
+            # Skip empty messages
+            content = msg.get("content", "").strip()
+            if not content:
+                continue
+            
+            # Transform role: bot -> assistant
+            role = msg.get("role", "user")
+            if role == "bot":
+                role = "assistant"
+            
+            # Create clean message with only required fields
+            clean_msg = {
+                "role": role,
+                "content": content
+            }
+            
+            # Skip error messages from previous failed attempts
+            if not any(pattern in content for pattern in self.ERROR_PATTERNS):
+                transformed.append(clean_msg)
+        
+        return transformed
+    
+    def _validate_environment(self):
+        """Validate that required environment variables are set"""
+        if not self.API_URL or not self.API_KEY:
+            raise ValueError("Missing required environment variables: API_URL or API_KEY")
+        
+        # Clean environment variables
+        api_key = (self.API_KEY or "").strip()
+        api_org = (self.API_ORGANIZATION_ID or "").strip()
+        
+        return api_key, api_org
+    
+    def _build_request_headers(self, api_key, api_org):
+        """Build headers for API request"""
+        headers = {
+            "Content-Type": "application/json",
+            "api-key": api_key,
+        }
+        
+        if api_org:
+            headers["api-organization-id"] = api_org
+        
+        # Optional: Include actual request origin if needed
+        # origin = request.headers.get('Origin')
+        # if origin:
+        #     headers["Origin"] = origin
+        #     headers["Referer"] = origin + "/"
+            
+        return headers
+    
+    def _process_streaming_response(self, response):
+        """Process SSE-like streaming response"""
+        response_text = ""
+        for line in response.iter_lines():
+            if not line:
+                continue
+            decoded_line = line.decode("utf-8", errors="ignore")
+            if decoded_line.startswith("data:"):
+                response_text += decoded_line[5:].strip() + "\n"
+        return response_text.strip()
+    
+    def _handle_chat_request(self):
+        """
+        Common chat handling logic for both public and private endpoints.
+        Transforms messages between frontend and backend formats.
+        """
+        try:
+            # Parse request data
+            data = request.json
+            if not data:
+                return jsonify({"error": "Request body must contain JSON data"}), 400
+            
+            # Validate assistant configuration
+            assistant_id = data.get("assistantId")
+            if not assistant_id:
+                return jsonify({"error": "assistantId is required"}), 400
+                
+            if assistant_id not in ASSISTANT_SETTINGS:
+                return jsonify({"error": f"Assistant ID '{assistant_id}' not found"}), 404
+            
+            assistant_config = ASSISTANT_SETTINGS[assistant_id]
+            
+            # Transform messages for backend
+            messages = data.get("messages", [])
+            cleaned_messages = self._transform_messages_for_backend(messages)
+            
+            if not cleaned_messages:
+                return jsonify({"error": "No valid messages to process"}), 400
+            
+            # Build payload
+            payload = {
+                "model": {"id": assistant_config["MODEL_ID"]},
+                "messages": cleaned_messages,
+                "roleId": assistant_config["ROLE_ID"],
+                "temperature": assistant_config["TEMPERATURE"],
+                "selectedMode": assistant_config["MODE"],
+                "selectedFiles": assistant_config["SELECTED_FILES"],
+                "selectedDataCollections": assistant_config["SELECTED_DATA_COLLECTIONS"],
+            }
+            
+            # Validate environment and get clean values
+            try:
+                api_key, api_org = self._validate_environment()
+            except ValueError as e:
+                logger.error(f"Environment validation failed: {str(e)}")
+                return jsonify({"error": "Server configuration error"}), 500
+            
+            # Build request headers
+            headers = self._build_request_headers(api_key, api_org)
+            
+            # Make API request
+            try:
+                response = requests.post(
+                    self.API_URL, 
+                    json=payload, 
+                    headers=headers, 
+                    stream=True, 
+                    timeout=30
+                )
+            except requests.exceptions.Timeout:
+                logger.error("API request timed out")
+                return jsonify({"error": "Request timed out"}), 504
+            except requests.exceptions.RequestException as e:
+                logger.error(f"API request failed: {str(e)}")
+                return jsonify({"error": "Failed to connect to API"}), 503
+            
+            # Handle successful response
+            if response.status_code == 200:
+                response_text = self._process_streaming_response(response)
+                
+                # Return response in frontend format
+                return jsonify({
+                    "response": response_text,
+                    "role": "bot"  # Frontend expects "bot" not "assistant"
+                }), 200
+            
+            # Handle error responses
+            try:
+                error_details = response.json()
+            except ValueError:
+                error_details = {
+                    "error": "API request failed",
+                    "status": response.status_code,
+                    "details": response.text[:400] if response.text else "No details available"
+                }
+            
+            # Add helpful hints for specific errors
+            if response.status_code == 401:
+                www_auth = response.headers.get("WWW-Authenticate", "")
+                if "Bearer" in www_auth:
+                    error_details["hint"] = "Authentication failed. Check API credentials."
+            
+            logger.error(f"API returned error: {response.status_code}")
+            return jsonify(error_details), response.status_code
+            
+        except Exception as e:
+            logger.exception("Unexpected error in chat request handler")
+            return jsonify({"error": "Internal server error"}), 500
     
     def _create_blueprint(self):
         # Create a new blueprint
@@ -180,30 +358,19 @@ class ChatBotService:
         
         @api_bp.route('/hello')
         def hello():
-            print("Welcome to the chatbot service API")
-            return "<h1>Welcome to the Chatpot Prototype service API</h1>"
+            return "<h1>Welcome to the Chatbot Prototype service API</h1>"
         
         @api_bp.get("/status")
         def get_status():
-            print("Service is running")
             return jsonify({"message": "Service is running"}), 200
         
         # Public chat endpoint
         @api_bp.route('/v1/public/chat', methods=['POST'])
         @cross_origin(origins=self.public_cors_origins)
         def public_chat():
-            # Print raw body
-            print("Raw body:", request.get_data(as_text=True))
-
-            # Or, if you expect JSON
-            try:
-                print("JSON body:", request.get_json())
-            except Exception as e:
-                print("Could not parse JSON:", e)
-
             return self._handle_chat_request()
         
-        # Private chat endpoint
+        # Private chat endpoint  
         @api_bp.route('/v1/private/chat', methods=['POST'])
         @cross_origin(origins=self.private_cors_origins)
         def private_chat():
@@ -213,8 +380,6 @@ class ChatBotService:
         @api_bp.route('/v1/reload-settings', methods=['POST'])
         @cross_origin(origins=self.private_cors_origins)
         def reload_settings():
-            # In the future, this would make an API call
-            # For now, just reload the hardcoded settings
             settings = load_assistant_settings()
             return jsonify({"message": "Settings reloaded successfully", "settings": settings}), 200
         
@@ -223,23 +388,17 @@ class ChatBotService:
         @cross_origin(origins=self.private_cors_origins)
         def publish_bot():
             try:
-                # Add a single debug message at the beginning
-                print("Publish bot endpoint called")
-                
                 # Check if we're using the old file upload method or new config method
                 if request.files and 'bot_js' in request.files:
                     # Old method - file upload
                     file = request.files.get('bot_js')
-                    print("Using file upload method")
+                    logger.info("Using file upload method for bot publishing")
                     result, status_code = self.aws_service.publish_bot_from_file(file)
                 else:
                     # New method - using config
                     try:
                         # Get the JSON data and handle both formats
                         data = request.get_json(force=True)
-                        
-                        # Print only once and limit output size
-                        print(f"Request contains JSON data of size: {len(str(data))}")
                         
                         if not data:
                             return jsonify({"error": "No JSON data received"}), 400
@@ -251,29 +410,24 @@ class ChatBotService:
                             # If the data is directly the config (no wrapping)
                             config = data
                         
-                        # Print only once
-                        print(f"Config contains {len(config)} top-level keys")
-                        
                         if not config:
                             return jsonify({"error": "Empty config received"}), 400
                         
                         result, status_code = self.aws_service.publish_bot(config)
                     except Exception as json_error:
-                        print(f"JSON parsing error: {str(json_error)}")
+                        logger.error(f"JSON parsing error: {str(json_error)}")
                         return jsonify({"error": f"Invalid JSON data: {str(json_error)}"}), 400
                 
                 return jsonify(result), status_code
             except Exception as e:
-                print(f"Error publishing bot: {str(e)}")
+                logger.error(f"Error publishing bot: {str(e)}")
                 return jsonify({"error": str(e)}), 500
-
         
         # Bot configuration update endpoint - using template
         @api_bp.route('/v1/private/update-bot-config', methods=['POST'])
         @cross_origin(origins=self.private_cors_origins)
         def update_bot_config():
             try:
-                
                 # Get data from request body
                 data = request.json
                 if not data or 'config' not in data:
@@ -290,7 +444,7 @@ class ChatBotService:
                 return jsonify(result), status_code
                 
             except Exception as e:
-                print(f"Error updating bot config: {str(e)}")
+                logger.error(f"Error updating bot config: {str(e)}")
                 return jsonify({"error": str(e)}), 500
           
         @api_bp.route('/v1/private/delete-bot', methods=['POST'])
@@ -310,7 +464,7 @@ class ChatBotService:
                 return jsonify(result), status_code
                     
             except Exception as e:
-                print(f"Error deleting bot: {str(e)}")
+                logger.error(f"Error deleting bot: {str(e)}")
                 return jsonify({"error": str(e)}), 500
             
         # New endpoint to download current bot JS
@@ -326,7 +480,7 @@ class ChatBotService:
                 return jsonify(result), status_code
                 
             except Exception as e:
-                print(f"Error downloading bot: {str(e)}")
+                logger.error(f"Error downloading bot: {str(e)}")
                 return jsonify({"error": str(e)}), 500
         
         # New endpoint to get the template file
@@ -348,7 +502,7 @@ class ChatBotService:
                 }), 200
                 
             except Exception as e:
-                print(f"Error retrieving template: {str(e)}")
+                logger.error(f"Error retrieving template: {str(e)}")
                 return jsonify({"error": str(e)}), 500
         
         # New endpoint to update the template file
@@ -378,151 +532,10 @@ class ChatBotService:
                     return jsonify({"error": f"Failed to write template: {str(write_error)}"}), 500
                 
             except Exception as e:
-                print(f"Error updating template: {str(e)}")
+                logger.error(f"Error updating template: {str(e)}")
                 return jsonify({"error": str(e)}), 500
             
         return api_bp
-    
-    
-
-    def _handle_chat_request(self):
-        """
-        Common chat handling logic for both public and private endpoints
-        """
-        from urllib.parse import urlparse
-        try:
-            data = request.json
-            if not data:
-                return jsonify({"error": "Request body must contain JSON data"}), 400
-            
-            assistant_id = data.get("assistantId")
-            if assistant_id not in ASSISTANT_SETTINGS:
-                return jsonify({"error": f"Assistant ID '{assistant_id}' not found in configuration"}), 400
-            
-            assistant_config = ASSISTANT_SETTINGS[assistant_id]
-            
-            # ========== TRANSFORM MESSAGES FOR BACKEND ==========
-            def transform_messages_for_backend(messages):
-                """Transform frontend messages to backend format"""
-                transformed = []
-                for msg in messages:
-                    # Skip empty messages
-                    if not msg.get("content"):
-                        continue
-                    
-                    # Transform role: bot -> assistant
-                    role = msg.get("role", "user")
-                    if role == "bot":
-                        role = "assistant"
-                    
-                    # Clean message - only keep role and content
-                    clean_msg = {
-                        "role": role,
-                        "content": msg.get("content", "")
-                    }
-                    
-                    # Skip error messages from previous failed attempts
-                    if "Sorry, something went wrong" not in clean_msg["content"]:
-                        transformed.append(clean_msg)
-                
-                return transformed
-            
-            # Transform messages before sending
-            cleaned_messages = transform_messages_for_backend(data.get("messages", []))
-            
-            payload = {
-                "model": {"id": assistant_config["MODEL_ID"]},
-                "messages": cleaned_messages,
-                "roleId": assistant_config["ROLE_ID"],
-                "temperature": assistant_config["TEMPERATURE"],
-                "selectedMode": assistant_config["MODE"],
-                "selectedFiles": assistant_config["SELECTED_FILES"],
-                "selectedDataCollections": assistant_config["SELECTED_DATA_COLLECTIONS"],
-            }
-            
-            print("Transformed payload for backend:", payload)
-            
-            # ---- env sanity & masking ----
-            print("API_URL set:", bool(self.API_URL),
-                "API_KEY len:", len(self.API_KEY or ""),
-                "ORG len:", len(self.API_ORGANIZATION_ID or ""))
-            
-            if not self.API_URL or not self.API_KEY:
-                return jsonify({"error": "Server misconfigured: missing API_URL or API_KEY"}), 500
-            
-            upstream_host = urlparse(self.API_URL).netloc
-            print("Upstream host:", upstream_host)
-            
-            # Strip accidental spaces/newlines in envs
-            raw_key = self.API_KEY or ""
-            key = raw_key.strip()
-            if key != raw_key:
-                print("API_KEY had surrounding whitespace; using stripped value.")
-            
-            raw_org = self.API_ORGANIZATION_ID or ""
-            org = raw_org.strip()
-            if org != raw_org:
-                print("API_ORGANIZATION_ID had surrounding whitespace; using stripped value.")
-            
-            # ---- headers for API-key scheme ----
-            headers = {
-                "Content-Type": "application/json",
-                "api-key": key,
-                "api-organization-id": org,
-                "Origin": "https://www.506.ai",
-                "Referer": "https://www.506.ai/"
-            }
-            
-            print({
-                "sending_headers": list(headers.keys()),
-                "api_key_tail": key[-6:],
-                "org_tail": org[-6:] if org else "",
-            })
-            
-            # ---- call upstream ----
-            response = requests.post(self.API_URL, json=payload, headers=headers, stream=True, timeout=30)
-            
-            # verbose diagnostics
-            print("Upstream status:", response.status_code)
-            print("Upstream response headers:", dict(response.headers))
-            
-            if response.status_code == 200:
-                # Process streaming "data:" lines (SSE-like)
-                response_text = ""
-                for line in response.iter_lines():
-                    if not line:
-                        continue
-                    decoded_line = line.decode("utf-8", errors="ignore")
-                    if decoded_line.startswith("data:"):
-                        response_text += decoded_line[5:].strip() + "\n"
-                
-                # ========== TRANSFORM RESPONSE FOR FRONTEND ==========
-                # The frontend expects the bot's response with role: "bot"
-                # We need to return in the format the frontend expects
-                frontend_response = {
-                    "response": response_text.strip(),
-                    "role": "bot"  # Frontend expects "bot" not "assistant"
-                }
-                
-                return jsonify(frontend_response), 200
-            
-            # Forward error body if possible
-            try:
-                error_details = response.json()
-            except ValueError:
-                error_details = {"error": "Non-JSON response", "details": response.text[:400]}
-            
-            # Check for auth issues
-            www = response.headers.get("WWW-Authenticate", "")
-            if response.status_code == 401 and "Bearer" in www:
-                error_details["hint"] = "Upstream expects a Bearer JWT. Your API key is not a JWT."
-            
-            return jsonify({"error": "API call failed", "details": error_details}), response.status_code
-            
-        except Exception as e:
-            print("Exception in _handle_chat_request:", str(e))
-        return jsonify({"error": str(e)}), 500
-
 
 # Load assistant settings when the module is imported
 load_assistant_settings()
